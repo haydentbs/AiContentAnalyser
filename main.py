@@ -18,12 +18,12 @@ import plotly.graph_objects as go
 import plotly.express as px
 from plotly.subplots import make_subplots
 
-from config.settings import load_app_config, validate_config
-from config.models import AppConfig, EvaluationResult, MetricResult
-from storage.guidelines import load_guidelines
-from storage.reports import ReportStorage
-from agents.llm_client import create_llm_client, LLMClientError, ConnectionTestResult
-from agents.coordinator_agent import CoordinatorAgent
+from core.config.settings import load_app_config, validate_config
+from core.config.models import AppConfig, EvaluationResult, MetricResult
+from core.storage.guidelines import load_guidelines
+from core.storage.reports import ReportStorage
+from core.agents.llm_client import create_llm_client, LLMClientError, ConnectionTestResult
+from core.agents.coordinator_agent import CoordinatorAgent
 
 # Configure logging
 logging.basicConfig(

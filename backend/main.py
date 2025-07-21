@@ -28,13 +28,22 @@ class ApiResponse(BaseModel, Generic[T]):
 
 class EvaluationRequest(BaseModel):
     content: str
+    llm: Optional[dict] = None  # Optional LLM configuration for this evaluation
 
 @app.post("/api/evaluate", response_model=ApiResponse[EvaluationResult])
 async def evaluate_content(request: EvaluationRequest):
     try:
         config = load_app_config("config.toml")
         guidelines = load_guidelines(config.guidelines_path)
-        llm_client = create_llm_client(config.llm)
+        
+        # Use custom LLM config if provided, otherwise use default config
+        if request.llm:
+            from core.config.models import LLMConfig
+            llm_config = LLMConfig(**request.llm)
+            llm_client = create_llm_client(llm_config)
+        else:
+            llm_client = create_llm_client(config.llm)
+            
         coordinator = CoordinatorAgent(llm_client)
 
         result = await coordinator.evaluate_content(request.content, guidelines)

@@ -5,10 +5,12 @@ import { Button } from "../components/ui/button"
 import { Textarea } from "../components/ui/textarea"
 import { Label } from "../components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
-import { Upload, FileText, Loader2, AlertCircle, CheckCircle } from "lucide-react"
+import { RadioGroup, RadioGroupItem } from "../components/ui/radio-group"
+import { Input } from "../components/ui/input"
+import { Upload, FileText, Loader2, AlertCircle, CheckCircle, Settings } from "lucide-react"
 import { Alert, AlertDescription } from "../components/ui/alert"
 import apiClient from "../api/client"
-import { Sample } from "../types/api"
+import { Sample, LLMConfig } from "../types/api"
 import { useToast } from "../components/ui/use-toast"
 
 export default function AnalyzePage() {
@@ -18,6 +20,13 @@ export default function AnalyzePage() {
   const [error, setError] = useState("")
   const [samples, setSamples] = useState<Sample[]>([])
   const [selectedSampleId, setSelectedSampleId] = useState<string | null>(null)
+  const [useCustomModel, setUseCustomModel] = useState(false)
+  const [customLLMConfig, setCustomLLMConfig] = useState<LLMConfig>({
+    provider: "openai",
+    model_name: "gpt-4.1-2025-04-14",
+    api_key: "",
+    base_url: "",
+  })
   const navigate = useNavigate()
   const { toast } = useToast()
 
@@ -117,7 +126,19 @@ export default function AnalyzePage() {
     setError("") // Clear any previous general error
 
     try {
-      const response = await apiClient.evaluateContent(content)
+      const evaluationRequest = {
+        content,
+        ...(useCustomModel && customLLMConfig && {
+          llm: {
+            provider: customLLMConfig.provider,
+            model_name: customLLMConfig.model_name,
+            api_key: customLLMConfig.api_key || undefined,
+            base_url: customLLMConfig.base_url || undefined,
+          }
+        })
+      }
+      
+      const response = await apiClient.evaluateContent(evaluationRequest)
       toast({
         title: "Analysis Complete",
         description: "Content successfully analyzed.",
@@ -154,7 +175,7 @@ export default function AnalyzePage() {
       setError("")
       toast({
         title: "Sample Loaded",
-        description: `Sample '${sample.title}' loaded successfully.`,
+        description: `Sample '${sample.name}' loaded successfully.`,
       })
     } catch (err) {
       console.error("Sample load error:", err)
@@ -164,6 +185,23 @@ export default function AnalyzePage() {
         variant: "destructive",
       })
     }
+  }
+
+  const handleProviderChange = (provider: "openai" | "ollama" | "lmstudio") => {
+    setCustomLLMConfig({
+      ...customLLMConfig,
+      provider,
+      model_name: provider === "openai" ? "gpt-4.1-2025-04-14" : provider === "ollama" ? "llama2" : "mistral",
+      base_url: provider === "openai" ? "" : provider === "ollama" ? "http://localhost:11434" : "http://localhost:1234"
+    })
+  }
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setCustomLLMConfig({
+      ...customLLMConfig,
+      [name]: value
+    })
   }
 
   const wordCount = content
@@ -186,6 +224,158 @@ export default function AnalyzePage() {
               Upload a file or paste your content to get comprehensive feedback on quality, clarity, and engagement
             </CardDescription>
           </CardHeader>
+        </Card>
+
+        {/* Model Selection */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Settings className="w-5 h-5" />
+              Model Selection
+            </CardTitle>
+            <CardDescription>
+              Choose which AI model to use for content analysis
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="use-custom-model"
+                  checked={useCustomModel}
+                  onChange={(e) => setUseCustomModel(e.target.checked)}
+                  className="rounded border-gray-300"
+                />
+                <Label htmlFor="use-custom-model">
+                  Use custom model (otherwise uses default from settings)
+                </Label>
+              </div>
+
+              {useCustomModel && (
+                <div className="border rounded-lg p-4 space-y-4">
+                  <Tabs
+                    defaultValue={customLLMConfig.provider}
+                    onValueChange={(value) => handleProviderChange(value as "openai" | "ollama" | "lmstudio")}
+                    className="w-full"
+                  >
+                    <TabsList className="grid w-full grid-cols-3">
+                      <TabsTrigger value="openai">OpenAI</TabsTrigger>
+                      <TabsTrigger value="ollama">Ollama</TabsTrigger>
+                      <TabsTrigger value="lmstudio">LM Studio</TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="openai" className="space-y-4 mt-4">
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="openai-api-key">API Key</Label>
+                          <Input
+                            id="openai-api-key"
+                            name="api_key"
+                            type="password"
+                            placeholder="sk-..."
+                            value={customLLMConfig.api_key || ""}
+                            onChange={handleInputChange}
+                          />
+                        </div>
+
+                                                 <div className="space-y-2">
+                           <Label htmlFor="openai-model">Model</Label>
+                           <RadioGroup
+                             defaultValue={customLLMConfig.model_name}
+                             onValueChange={(value) => setCustomLLMConfig({...customLLMConfig, model_name: value})}
+                           >
+                             <div className="flex items-center space-x-2">
+                               <RadioGroupItem value="gpt-4.1-2025-04-14" id="gpt-4.1-2025-04-14" />
+                               <Label htmlFor="gpt-4.1-2025-04-14">GPT-4.1 (2025-04-14)</Label>
+                             </div>
+                             <div className="flex items-center space-x-2">
+                               <RadioGroupItem value="gpt-4.1-mini-2025-04-14" id="gpt-4.1-mini-2025-04-14" />
+                               <Label htmlFor="gpt-4.1-mini-2025-04-14">GPT-4.1 Mini (2025-04-14)</Label>
+                             </div>
+                             <div className="flex items-center space-x-2">
+                               <RadioGroupItem value="gpt-4.1-nano" id="gpt-4.1-nano" />
+                               <Label htmlFor="gpt-4.1-nano">GPT-4.1 Nano</Label>
+                             </div>
+                             <div className="flex items-center space-x-2">
+                               <RadioGroupItem value="gpt-4" id="gpt-4" />
+                               <Label htmlFor="gpt-4">GPT-4</Label>
+                             </div>
+                             <div className="flex items-center space-x-2">
+                               <RadioGroupItem value="gpt-3.5-turbo" id="gpt-3.5-turbo" />
+                               <Label htmlFor="gpt-3.5-turbo">GPT-3.5 Turbo</Label>
+                             </div>
+                           </RadioGroup>
+                         </div>
+                      </div>
+                    </TabsContent>
+
+                    <TabsContent value="ollama" className="space-y-4 mt-4">
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="ollama-url">Ollama URL</Label>
+                          <Input
+                            id="ollama-url"
+                            name="base_url"
+                            placeholder="http://localhost:11434"
+                            value={customLLMConfig.base_url || ""}
+                            onChange={handleInputChange}
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="ollama-model">Model</Label>
+                          <RadioGroup
+                            defaultValue={customLLMConfig.model_name}
+                            onValueChange={(value) => setCustomLLMConfig({...customLLMConfig, model_name: value})}
+                          >
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="llama2" id="llama2" />
+                              <Label htmlFor="llama2">Llama 2</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="mistral" id="mistral" />
+                              <Label htmlFor="mistral">Mistral</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="codellama" id="codellama" />
+                              <Label htmlFor="codellama">CodeLlama</Label>
+                            </div>
+                          </RadioGroup>
+                        </div>
+                      </div>
+                    </TabsContent>
+
+                    <TabsContent value="lmstudio" className="space-y-4 mt-4">
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="lmstudio-url">LM Studio URL</Label>
+                          <Input
+                            id="lmstudio-url"
+                            name="base_url"
+                            placeholder="http://localhost:1234/v1"
+                            value={customLLMConfig.base_url || ""}
+                            onChange={handleInputChange}
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="lmstudio-model">Model</Label>
+                          <Input
+                            id="lmstudio-model"
+                            name="model_name"
+                            placeholder="Model name"
+                            value={customLLMConfig.model_name || ""}
+                            onChange={handleInputChange}
+                          />
+                        </div>
+                      </div>
+                    </TabsContent>
+                  </Tabs>
+                </div>
+              )}
+            </div>
+          </CardContent>
         </Card>
 
         {/* Content Input */}
@@ -277,7 +467,7 @@ export default function AnalyzePage() {
                           onClick={() => handleSampleSelect(sample.id)}
                         >
                           <CardHeader>
-                            <CardTitle className="text-lg">{sample.title}</CardTitle>
+                            <CardTitle className="text-lg">{sample.name}</CardTitle>
                             <CardDescription>{sample.description}</CardDescription>
                           </CardHeader>
                           <CardContent>

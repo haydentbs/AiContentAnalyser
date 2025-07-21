@@ -58,6 +58,7 @@ export interface ApiResponse<T> {
 // Request models
 export interface EvaluateContentRequest {
   content: string;
+  llm?: LLMConfig;  // Optional LLM configuration for this evaluation
   options?: {
     guidelines?: string;
     metrics?: string[];

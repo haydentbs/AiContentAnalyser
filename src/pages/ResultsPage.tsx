@@ -261,11 +261,28 @@ export default function ResultsPage() {
           <CardContent>
             <Tabs defaultValue={Object.keys(categoryMetrics)[0]} className="w-full">
               <TabsList className="grid w-full" style={{ gridTemplateColumns: `repeat(${Object.keys(categoryMetrics).length}, 1fr)` }}>
-                {Object.keys(categoryMetrics).map((category) => (
-                  <TabsTrigger key={category} value={category} className="capitalize">
-                    {category}
-                  </TabsTrigger>
-                ))}
+                {Object.keys(categoryMetrics).map((category) => {
+                  const score = reportData.category_scores[category as keyof typeof reportData.category_scores];
+                  const getScoreActiveColor = (s: number) => {
+                    if (s >= 4) return "data-[state=active]:bg-green-100 data-[state=active]:border-green-300";
+                    if (s >= 3) return "data-[state=active]:bg-yellow-100 data-[state=active]:border-yellow-300";
+                    if (s >= 2) return "data-[state=active]:bg-orange-100 data-[state=active]:border-orange-300";
+                    return "data-[state=active]:bg-red-100 data-[state=active]:border-red-300";
+                  };
+                  return (
+                    <TabsTrigger
+                      key={category}
+                      value={category}
+                      className={`capitalize flex justify-between items-center py-2 ${getScoreColor(score)} ${getScoreActiveColor(score)}`}
+                    >
+                      <span>{category}</span>
+                      <span className="font-bold flex items-center gap-1">
+                        {getScoreIcon(score)}
+                        {score.toFixed(1)}
+                      </span>
+                    </TabsTrigger>
+                  );
+                })}
               </TabsList>
 
               {Object.entries(categoryMetrics).map(([category, metrics]) => (

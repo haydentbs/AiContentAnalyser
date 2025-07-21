@@ -8,23 +8,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
 import { Settings, CheckCircle, AlertCircle, Loader2 } from "lucide-react"
 import { Alert, AlertDescription } from "../components/ui/alert"
 import apiClient from "../api/client"
-import { AppConfig, LLMProvider, LLMSettings } from "../types/api"
+import { AppConfig } from "../types/api"
 import { useToast } from "../components/ui/use-toast"
-
-type LLMProvider = "openai" | "ollama" | "lmstudio"
-
-interface ProviderConfig {
-  provider: LLMProvider
-  model_name: string
-  api_key?: string
-  base_url?: string
-}
 
 export default function SettingsPage() {
   const [config, setConfig] = useState<AppConfig | null>(null)
   const [isTesting, setIsTesting] = useState(false)
   const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null)
   const [isSaving, setIsSaving] = useState(false)
+  const { toast } = useToast()
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -39,14 +31,14 @@ export default function SettingsPage() {
     fetchSettings()
   }, [])
 
-  const handleProviderChange = (provider: LLMProvider) => {
+  const handleProviderChange = (provider: "openai" | "ollama" | "lmstudio") => {
     if (!config) return
     setConfig({
       ...config,
       llm: {
         ...config.llm,
         provider,
-        model_name: provider === "openai" ? "gpt-4" : provider === "ollama" ? "llama2" : "mistral",
+        model_name: provider === "openai" ? "gpt-4.1-2025-04-14" : provider === "ollama" ? "llama2" : "mistral",
         base_url: provider === "openai" ? "" : provider === "ollama" ? "http://localhost:11434" : "http://localhost:1234"
       }
     })
@@ -72,7 +64,13 @@ export default function SettingsPage() {
     setTestResult(null)
     
     try {
-      const result = await apiClient.testConnection({ llm: config.llm })
+      const result = await apiClient.testConnection({
+        provider: config.llm.provider,
+        model_name: config.llm.model_name,
+        api_key: config.llm.api_key,
+        base_url: config.llm.base_url
+      })
+      const success = result.success
       setTestResult({
         success,
         message: success 
@@ -153,7 +151,7 @@ export default function SettingsPage() {
           <CardContent>
             <Tabs 
               defaultValue={config.llm.provider} 
-              onValueChange={(value) => handleProviderChange(value as LLMProvider)}
+              onValueChange={(value) => handleProviderChange(value as "openai" | "ollama" | "lmstudio")}
               className="w-full"
             >
               <TabsList className="grid w-full grid-cols-3">
@@ -185,6 +183,18 @@ export default function SettingsPage() {
                       defaultValue={config.llm.model_name}
                       onValueChange={(value) => setConfig({...config, llm: {...config.llm, model_name: value}})}
                     >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="gpt-4.1-2025-04-14" id="gpt-4.1-2025-04-14" />
+                        <Label htmlFor="gpt-4.1-2025-04-14">GPT-4.1 (2025-04-14)</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="gpt-4.1-mini-2025-04-14" id="gpt-4.1-mini-2025-04-14" />
+                        <Label htmlFor="gpt-4.1-mini-2025-04-14">GPT-4.1 Mini (2025-04-14)</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="gpt-4.1-nano" id="gpt-4.1-nano" />
+                        <Label htmlFor="gpt-4.1-nano">GPT-4.1 Nano</Label>
+                      </div>
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="gpt-4" id="gpt-4" />
                         <Label htmlFor="gpt-4">GPT-4</Label>

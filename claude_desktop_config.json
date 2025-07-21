@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "content-scorecard": {
+      "command": "python3",
+      "args": ["/absolute/path/to/your/workspace/mcp_server.py"],
+      "cwd": "/absolute/path/to/your/workspace",
+      "env": {
+        "OPENAI_API_KEY": "your-openai-api-key-here"
+      }
+    }
+  }
+}

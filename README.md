@@ -19,6 +19,7 @@ Content Scorecard is an AI-powered content evaluation tool that helps writers, m
 - **📱 Responsive Design**: Optimized for desktop, tablet, and mobile devices
 - **🔒 Privacy-First**: Run completely local with offline LLM options - no data leaves your machine
 - **🧪 Sample Content**: Built-in sample content for testing and demonstration
+- **🔌 MCP Integration**: Built-in Model Context Protocol server for AI assistant integration
 
 ## 🏗️ Architecture
 
@@ -134,6 +135,40 @@ streamlit run main.py
 ```
 
 Access at `http://localhost:8501`
+
+## 🔌 MCP Server for AI Assistants
+
+Content Scorecard includes a built-in Model Context Protocol (MCP) server that allows AI assistants like Claude to analyze content directly. This provides a natural language interface to the Content Scorecard evaluation system.
+
+### Quick MCP Setup
+
+1. **Start the MCP Server**:
+   ```bash
+   python3 mcp_server.py
+   ```
+
+2. **Configure Claude Desktop** (add to `claude_desktop_config.json`):
+   ```json
+   {
+     "mcpServers": {
+       "content-scorecard": {
+         "command": "python3",
+         "args": ["/absolute/path/to/your/workspace/mcp_server.py"],
+         "cwd": "/absolute/path/to/your/workspace",
+         "env": {
+           "OPENAI_API_KEY": "your-openai-api-key-here"
+         }
+       }
+     }
+   }
+   ```
+
+3. **Use with Claude**:
+   ```
+   "Please analyze this blog post for content quality: [paste your content]"
+   ```
+
+For detailed MCP setup instructions, see [`MCP_SERVER_SETUP.md`](MCP_SERVER_SETUP.md).
 
 ## 🎯 Usage Guide
 

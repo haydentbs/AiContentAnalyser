@@ -1,0 +1,67 @@
+categories:
+  clarity:
+    weight: 1.0
+    description: "How clear and understandable is the content?"
+    metrics:
+      conciseness:
+        description: "Is the writing free of unnecessary filler words and redundancy?"
+        weight: 0.3
+      jargon_usage:
+        description: "Is technical jargon properly defined or avoided when appropriate?"
+        weight: 0.4
+      logical_structure:
+        description: "Does the content follow a logical flow with clear headings and transitions?"
+        weight: 0.3
+
+  accuracy:
+    weight: 1.2
+    description: "How factually correct and well-supported is the content?"
+    metrics:
+      data_support:
+        description: "Are claims backed by credible data, sources, or evidence?"
+        weight: 0.6
+      fact_verification:
+        description: "Are there any apparent factual errors or unsupported claims?"
+        weight: 0.4
+
+  engagement:
+    weight: 0.9
+    description: "How engaging and compelling is the content for readers?"
+    metrics:
+      hook_effectiveness:
+        description: "Does the content have a strong opening that captures attention?"
+        weight: 0.4
+      storytelling:
+        description: "Does the content use narratives, examples, or anecdotes effectively?"
+        weight: 0.3
+      call_to_action:
+        description: "Does the content guide readers toward a clear next step or action?"
+        weight: 0.3
+
+  completeness:
+    weight: 1.1
+    description: "How thoroughly does the content cover the intended topic?"
+    metrics:
+      scope_coverage:
+        description: "Are all relevant aspects of the topic addressed adequately?"
+        weight: 0.5
+      depth_analysis:
+        description: "Is the level of detail appropriate for the intended audience?"
+        weight: 0.3
+      conclusion_strength:
+        description: "Does the content provide a satisfying conclusion or summary?"
+        weight: 0.2
+
+  readability:
+    weight: 0.8
+    description: "How easy is the content to read and understand?"
+    metrics:
+      sentence_variety:
+        description: "Is there good variation in sentence length and structure?"
+        weight: 0.3
+      paragraph_flow:
+        description: "Are paragraphs well-structured with smooth transitions?"
+        weight: 0.4
+      vocabulary_appropriateness:
+        description: "Is the vocabulary level appropriate for the target audience?"
+        weight: 0.3

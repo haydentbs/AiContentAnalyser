@@ -340,36 +340,57 @@ class ReportStorage:
         # Not found
         return None
     
-    def get_report_path(self, content_hash: str, format_type: str) -> Optional[str]:
-        """Get the file path for a report by content hash and format.
+    def list_reports(self) -> list:
+        """List all available report files in the reports directory.
         
-        Args:
-            content_hash: The content hash to search for
-            format_type: The format type ('json' or 'md')
-            
         Returns:
-            The file path if found, None otherwise
+            List of report filenames (JSON files only)
         """
         if not os.path.exists(self.reports_dir):
-            return None
-            
-        extension = "json" if format_type.lower() == "json" else "md"
-        short_hash = content_hash[:8] if len(content_hash) >= 8 else content_hash
+            return []
         
-        # Search for files with this hash pattern and extension
+        # Get all JSON report files
+        report_files = []
         for filename in os.listdir(self.reports_dir):
-            if filename.endswith(f'.{extension}') and short_hash in filename:
-                file_path = os.path.join(self.reports_dir, filename)
-                # For JSON files, verify the content hash matches
-                if extension == "json":
-                    try:
-                        report = self.load_report(file_path)
-                        if report.content_hash == content_hash:
-                            return file_path
-                    except Exception:
-                        continue
-                else:
-                    # For markdown files, assume it matches if the hash is in the filename
-                    return file_path
+            if filename.endswith('.json') and filename.startswith('report_'):
+                report_files.append(filename)
         
-        return None
+        # Sort by modification time (newest first)
+        report_files.sort(key=lambda f: os.path.getmtime(os.path.join(self.reports_dir, f)), reverse=True)
+        
+        return report_files
+    
+    def export_report(self, report_id: str, format_type: str) -> Optional[str]:
+        """Export a report by ID in the specified format.
+        
+        Args:
+            report_id: The report ID (filename without extension)
+            format_type: Export format ('json' or 'markdown')
+            
+        Returns:
+            Path to the exported file, or None if not found
+        """
+        # Find the JSON source file
+        json_filename = f"{report_id}.json" if not report_id.endswith('.json') else report_id
+        json_path = os.path.join(self.reports_dir, json_filename)
+        
+        if not os.path.exists(json_path):
+            return None
+        
+        try:
+            # Load the report
+            report = self.load_report(json_path)
+            
+            if format_type.lower() == "json":
+                return json_path
+            elif format_type.lower() in ["md", "markdown"]:
+                # Export as markdown
+                md_filename = report_id.replace('.json', '.md') if report_id.endswith('.json') else f"{report_id}.md"
+                md_path = self.save_report(report, "md", md_filename)
+                return md_path
+            else:
+                return None
+                
+        except Exception as e:
+            self.logger.error(f"Failed to export report {report_id}: {e}")
+            return None

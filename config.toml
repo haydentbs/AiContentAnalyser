@@ -1,0 +1,10 @@
+[llm]
+provider = "openai"
+model_name = "gpt-4"
+temperature = 0.3
+# api_key will be read from environment variable OPENAI_API_KEY
+
+[app]
+guidelines_path = "guidelines.yaml"
+reports_dir = "reports"
+ui_theme = "light"
